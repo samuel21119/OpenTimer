@@ -258,8 +258,10 @@ enable_testing()
 message(STATUS "Building unit tests ...")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/unittest)
 
-add_executable(utility unittest/utility.cpp)
-target_link_libraries(utility ${OT_LINK_FLAGS})
+# Rename the executable from utility to util in order to avoid the
+# name conflict with the library name in dreamplace.
+add_executable(util unittest/utility.cpp)
+target_link_libraries(util ${OT_LINK_FLAGS})
 
 add_executable(path unittest/path.cpp)
 target_link_libraries(path ${OT_LINK_FLAGS})
