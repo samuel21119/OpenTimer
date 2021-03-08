@@ -25,3 +25,6 @@
 *.exe
 *.out
 *.app
+
+# The generated config file
+ot/config.hpp

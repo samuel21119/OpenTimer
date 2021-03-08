@@ -39,10 +39,22 @@
 #include <random>
 #include <regex>
 #include <ratio>
-#include <experimental/filesystem>
 #include <optional>
 #include <unistd.h>
 #include <sys/wait.h>
+
+// This is a workaround when you find your g++ can detect filesystem in the
+// standard library, which induces a duplication declaration in compiling.
+// Do we need to check whether __cpp_lib_filesystem is defined? I am not
+// very sure... This macro cannot be detected sometimes.
+#if defined(__has_include) && __has_include(<filesystem>)
+#include <filesystem>
+#else
+#include <experimental/filesystem>
+namespace std {
+namespace filesystem = experimental::filesystem;
+};
+#endif
 
 // Clang mis-interprets variant's get as a non-friend of variant and cannot
 // get compiled correctly. We use the patch: 
@@ -62,10 +74,6 @@
 
 // Top header declaration.
 #include <ot/config.hpp>
-
-namespace std {
-  namespace filesystem = experimental::filesystem;
-};
 
 namespace ot {
 

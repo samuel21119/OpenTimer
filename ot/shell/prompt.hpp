@@ -40,15 +40,8 @@
 #include <cstring>
 #include <fstream>
 #include <string_view>
-#include <experimental/filesystem>
 #include <cassert>
-
-
-namespace std {
-
-namespace filesystem = experimental::filesystem;
-
-};
+#include <ot/headerdef.hpp>
 
 // ------------------------------------------------------------------------------------------------
 
