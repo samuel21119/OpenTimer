@@ -26,5 +26,13 @@
 *.out
 *.app
 
-# The generated config file
+# Config headers
 ot/config.hpp
+
+# Build directories
+build/
+
+# Binaries/examples
+bin/
+example/
+unittest/
