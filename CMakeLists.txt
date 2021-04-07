@@ -32,7 +32,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O2")
+  # Since we are going to compile a static library, it is better to add
+  # -fPIC flag. The shared library is also available but it is rather more
+  # possible that we encounter some problems working with other big
+  # project, especially those depending on torch extensions.
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O2 -fPIC")
 endif()
 
 # Check if static build
@@ -154,7 +158,7 @@ set(OT_CPP
 #message(STATUS "OT_CPP: ${OT_CPP}")
 
 # Add OpenTimer library
-add_library(OpenTimer SHARED ${OT_CPP})
+add_library(OpenTimer STATIC ${OT_CPP})
 
 
 ###########################################################
