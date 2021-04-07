@@ -154,7 +154,7 @@ set(OT_CPP
 #message(STATUS "OT_CPP: ${OT_CPP}")
 
 # Add OpenTimer library
-add_library(OpenTimer ${OT_CPP})
+add_library(OpenTimer SHARED ${OT_CPP})
 
 
 ###########################################################
