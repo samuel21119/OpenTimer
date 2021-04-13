@@ -36,3 +36,6 @@ build/
 bin/
 example/
 unittest/
+
+# Ignore benchmark/ because it can be too large
+benchmark/
