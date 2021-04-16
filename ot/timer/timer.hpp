@@ -123,6 +123,9 @@ class Timer {
     inline const auto& tests() const;
     inline const auto& arcs() const;
 
+    inline auto& nets(); // Mutable accessor
+    inline auto& pins(); // Mutable accessor
+
   private:
 
     mutable std::shared_mutex _mutex;
@@ -485,6 +488,18 @@ inline auto Timer::_remove_state(int s) {
   else {
     _state &= ~s;
   }
+}
+
+// Function: pins
+// Expose the pin data structure to users
+inline auto& Timer::pins() {
+  return _pins;
+}
+
+// Function: nets
+// Expose the net data structure to users
+inline auto& Timer::nets() {
+  return _nets;
 }
 
 };  // end of namespace ot ------------------------------------------------------------------------
