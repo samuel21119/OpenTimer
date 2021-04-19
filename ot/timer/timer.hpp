@@ -125,6 +125,7 @@ class Timer {
 
     inline auto& nets(); // Mutable accessor
     inline auto& pins(); // Mutable accessor
+    inline auto& gates(); // Mutable accessor
 
   private:
 
@@ -500,6 +501,12 @@ inline auto& Timer::pins() {
 // Expose the net data structure to users
 inline auto& Timer::nets() {
   return _nets;
+}
+
+// Function: gates
+// Expose the gate data structure to users
+inline auto& Timer::gates() {
+  return _gates;
 }
 
 };  // end of namespace ot ------------------------------------------------------------------------

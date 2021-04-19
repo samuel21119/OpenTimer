@@ -148,18 +148,39 @@ class Net {
   friend class Pin;
   
   struct EmptyRct {
+    // This struct wraps a two-dimensional array with a specific size
+    // (MAX_SPLIT (rows), MAX_TRAN (columns))
     std::array<std::array<float, MAX_TRAN>, MAX_SPLIT> load;
   };
 
   public:
-    
+    // Net class contains a default constructor, but Pin class does not.
+    // The operator[] is not available for map with Net as value type.
     Net() = default;
     Net(const std::string&);
 
-    inline const std::string& name() const;
-    inline size_t num_pins() const;
+    inline const std::string& name() const { return _name; }
+    inline size_t num_pins() const { return _pins.size(); }
 
-    inline const Rct* rct() const;
+    inline const Rct* rct() const { return std::get_if<Rct>(&_rct); }
+    inline Rct* rct() { return std::get_if<Rct>(&_rct); }
+
+    // The RCTree instance variable is actually a variant. The following
+    // setter is invalid because the copy constructor is implicitly
+    // deleted because the default definition would be ill-formed.
+    //
+    //    inline Net* rct(Rct& tree) { _rct = tree; return this; }
+    // -------
+
+    // Non-const accessors/mutators may be dangerous.
+    inline const Pin* root() const { return _root; }
+    inline Pin* root() { return _root; } // mutable accessor.
+    inline Net* root(Pin& rt) { _root = &rt; return this; } // setter/mutator
+
+    // Insert a new pin. Usually this kind of operations are not visible
+    // to the users as it should be done in parsers.
+    // When emulating the parser behaviours, they will be useful.
+    inline Net* append(Pin& pin) { _pins.emplace_back(&pin); return this; }
 
   private:
 
@@ -189,21 +210,6 @@ class Net {
     void _scale_capacitance(float);
     void _scale_resistance(float);
 }; 
-
-// Function: name
-inline const std::string& Net::name() const {
-  return _name;
-}
-
-// Function: num_pins
-inline size_t Net::num_pins() const {
-  return _pins.size();
-}
-
-// Function: rct
-inline const Rct* Net::rct() const {
-  return std::get_if<Rct>(&_rct);
-}
 
 };  // end of namespace ot. -----------------------------------------------------------------------
 
