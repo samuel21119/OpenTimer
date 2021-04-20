@@ -36,11 +36,11 @@ class RctNode {
 
     inline const Pin* pin() const { return _pin; }
     inline Pin* pin() { return _pin; } // mutable
-    inline RctNode* pin(Pin& p) { _pin = &p; return this; }
+    inline RctNode& pin(Pin& p) { _pin = &p; return *this; }
 
     // Append an RCEdge into list of fanin or fanout.
-    inline RctNode* append_fanin(RctEdge& e) { _fanin.emplace_back(&e); return this; } 
-    inline RctNode* append_fanout(RctEdge& e) { _fanout.emplace_back(&e); return this; }
+    inline RctNode& append_fanin(RctEdge& e) { _fanin.emplace_back(&e); return *this; } 
+    inline RctNode& append_fanout(RctEdge& e) { _fanout.emplace_back(&e); return *this; }
 
   private:
 
@@ -185,22 +185,22 @@ class Net {
     inline Rct* rct() { return std::get_if<Rct>(&_rct); }
 
     // The RCTree instance variable is actually a variant.
-    inline Net* rct(Rct& tree) {
+    inline Net& rct(Rct& tree) {
       std::variant<EmptyRct, Rct> tv = tree;
       this->_rct = std::move(tv);
-      return this;
+      return *this;
     }
     // -------
 
     // Non-const accessors/mutators may be dangerous.
     inline const Pin* root() const { return _root; }
     inline Pin* root() { return _root; } // mutable accessor.
-    inline Net* root(Pin& rt) { _root = &rt; return this; } // mutator
+    inline Net& root(Pin& rt) { _root = &rt; return *this; } // mutator
 
     // Insert a new pin. Usually this kind of operations are not visible
     // to the users as it should be done in parsers.
     // When emulating the parser behaviours, they will be useful.
-    inline Net* append(Pin& pin) { _pins.emplace_back(&pin); return this; }
+    inline Net& append(Pin& pin) { _pins.emplace_back(&pin); return *this; }
 
   private:
 
