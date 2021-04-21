@@ -34,6 +34,8 @@ class RctNode {
     float slew (Split, Tran, float) const;
     float delay(Split, Tran) const;
 
+    inline RctNode& name(std::string n) { _name = n; return *this; }
+
     inline const Pin* pin() const { return _pin; }
     inline Pin* pin() { return _pin; } // mutable
     inline RctNode& pin(Pin& p) { _pin = &p; return *this; }
@@ -74,7 +76,8 @@ class RctEdge {
   friend class Timer;
   
   public:
-    
+    // Note that this constructor requires the RC nodes to be reference
+    // type! Be aware of the lifetime of nodes.
     RctEdge(RctNode&, RctNode&, float);
 
     inline float res() const;
