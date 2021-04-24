@@ -35,6 +35,7 @@ class RctNode {
     float delay(Split, Tran) const;
 
     inline RctNode& name(std::string n) { _name = n; return *this; }
+    inline const auto name() const { return _name; }
 
     inline const Pin* pin() const { return _pin; }
     inline Pin* pin() { return _pin; } // mutable
@@ -125,7 +126,23 @@ class Rct {
     inline size_t num_nodes() const;
     inline size_t num_edges() const;
     
-    const RctNode* node(const std::string&) const;
+    inline const RctNode* node(const std::string&) const;
+    inline RctNode* node(const std::string& name) { return _node(name); }
+
+    inline Rct& root(RctNode* r) { _root = r; return *this;}
+    inline Rct& emplace_node(const std::string& name) {
+      _nodes.emplace(name, RctNode(name));
+      return *this;
+    }
+
+    inline Rct& emplace_edge(RctNode& from, RctNode& to, float res) {
+      _edges.emplace(_edges.end(), from, to, res);
+      return *this;
+    }
+    inline Rct& emplace_edge(RctEdge& e) {
+      _edges.emplace(_edges.end(), std::move(e));
+      return *this;
+    }
 
   private:
     // The root node of the RC tree.
@@ -193,6 +210,11 @@ class Net {
       this->_rct = std::move(tv);
       return *this;
     }
+    inline Net& emplace_rct() {
+      _rct.emplace<Rct>();
+      return *this;
+    }
+
     // -------
 
     // Non-const accessors/mutators may be dangerous.
