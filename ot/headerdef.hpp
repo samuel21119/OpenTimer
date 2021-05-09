@@ -56,15 +56,20 @@ namespace filesystem = experimental::filesystem;
 };
 #endif
 
-// Clang mis-interprets variant's get as a non-friend of variant and cannot
-// get compiled correctly. We use the patch: 
+// If your clang compiler mis-interprets variant's get as a non-friend of
+// variant and cannot get compiled correctly, try to use the patch: 
 // https://gcc.gnu.org/viewcvs/gcc?view=revision&revision=258854
-// to get rid of this.
-#if defined(__clang__)
-  #include <ot/patch/clang_variant.hpp>
-#else
-  #include <variant>
-#endif
+// to get rid of this. The example code is listed below
+//
+// #if defined(__clang__)
+//   #include <ot/patch/clang_variant.hpp>
+// #else
+//   #include <variant>
+// #endif
+//
+// With higher version, you may not need this. We do not check the version
+// of compiler automatically here.
+#include <variant>
 
 // third-party include
 #include <ot/taskflow/taskflow.hpp>

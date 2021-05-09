@@ -29,10 +29,17 @@ class RctNode {
     RctNode() = default;
     RctNode(const std::string&);
 
-    float load (Split, Tran) const;
-    float cap  (Split, Tran) const;
-    float slew (Split, Tran, float) const;
-    float delay(Split, Tran) const;
+    float load   (Split, Tran) const;
+    float cap    (Split, Tran) const;
+    float slew   (Split, Tran, float) const;
+    float delay  (Split, Tran) const;
+    float impulse(Split, Tran) const;
+    float ldelay (Split, Tran) const;
+
+    RctNode& load   (Split, Tran, float);
+    RctNode& delay  (Split, Tran, float);
+    RctNode& impulse(Split, Tran, float);
+    RctNode& ldelay (Split, Tran, float);
 
     inline RctNode& name(std::string n) { _name = n; return *this; }
     inline const auto name() const { return _name; }
@@ -81,6 +88,9 @@ class RctEdge {
     // type! Be aware of the lifetime of nodes.
     RctEdge(RctNode&, RctNode&, float);
 
+    const auto& from() const { return _from; }
+    const auto& to() const { return _to; }
+
     inline float res() const;
     inline void res(float);
   
@@ -126,14 +136,25 @@ class Rct {
     inline size_t num_nodes() const;
     inline size_t num_edges() const;
     
-    inline const RctNode* node(const std::string&) const;
+    const RctNode* node(const std::string&) const;
     inline RctNode* node(const std::string& name) { return _node(name); }
 
+    inline std::string name() const { return _name; }
+    inline Rct& name(const std::string& n) { _name = n; return *this; }
+
+    inline const RctNode* root() const { return _root; }
+    inline RctNode* root() { return _root; }
     inline Rct& root(RctNode* r) { _root = r; return *this;}
     inline Rct& emplace_node(const std::string& name) {
       _nodes.emplace(name, RctNode(name));
       return *this;
     }
+
+    inline const auto& nodes() const { return _nodes; }
+    inline auto& nodes() { return _nodes; }
+
+    inline const auto& edges() const { return _edges; }
+    inline auto& edges() { return _edges; }
 
     inline Rct& emplace_edge(RctNode& from, RctNode& to, float res) {
       _edges.emplace(_edges.end(), from, to, res);
@@ -144,7 +165,14 @@ class Rct {
       return *this;
     }
 
+    inline Rct& assign_root(const std::string& root) {
+      _root = _node(root); return *this;
+    }
+
   private:
+    // The name of the RC tree -> the name of its corresponding net.
+    std::string _name;
+
     // The root node of the RC tree.
     RctNode* _root {nullptr};
 

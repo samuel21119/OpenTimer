@@ -33,6 +33,36 @@ float RctNode::delay(Split m, Tran t) const {
   return _delay[m][t];
 }
 
+// Function: impulse
+float RctNode::impulse(Split m, Tran t) const {
+  return _impulse[m][t];
+}
+
+// Function: ldelay
+float RctNode::ldelay(Split m, Tran t) const {
+  return _ldelay[m][t];
+}
+
+// Funtion: load setter
+RctNode& RctNode::load(Split m, Tran t, float val) {
+  return _load[m][t] = val , *this;
+}
+
+// Funtion: delay setter
+RctNode& RctNode::delay(Split m, Tran t, float val) {
+  return _delay[m][t] = val , *this;
+}
+
+// Funtion: impulse setter
+RctNode& RctNode::impulse(Split m, Tran t, float val) {
+  return _impulse[m][t] = val , *this;
+}
+
+// Funtion: ldelay setter
+RctNode& RctNode::ldelay(Split m, Tran t, float val) {
+  return _ldelay[m][t] = val , *this;
+}
+
 // ------------------------------------------------------------------------------------------------
 
 // Constructor
