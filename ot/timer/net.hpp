@@ -132,6 +132,7 @@ class Rct {
     float total_ncap() const;
     float slew(const std::string&, Split, Tran, float) const;
     float delay(const std::string&, Split, Tran) const;
+    inline Rct& increase_cap(const std::string&, float);
 
     inline size_t num_nodes() const;
     inline size_t num_edges() const;
@@ -203,6 +204,14 @@ inline size_t Rct::num_nodes() const {
 // Function: num_edges
 inline size_t Rct::num_edges() const {
   return _edges.size();
+}
+
+inline Rct& Rct::increase_cap(const std::string& name, float delta) {
+  auto& node = _nodes[name];
+  FOR_EACH_EL_RF(el, rf) {
+    node._ncap[el][rf] += delta;
+  }
+  return *this;
 }
 
 // ------------------------------------------------------------------------------------------------
