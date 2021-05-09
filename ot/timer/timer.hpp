@@ -49,6 +49,7 @@ class Timer {
     Timer& connect_pin(std::string, std::string);
     Timer& insert_primary_input(std::string);
     Timer& insert_primary_output(std::string);
+    Timer& insert_frontier(Pin&);
     Timer& set_at(std::string, Split, Tran, std::optional<float>);
     Timer& set_rat(std::string, Split, Tran, std::optional<float>);
     Timer& set_slew(std::string, Split, Tran, std::optional<float>);
@@ -64,6 +65,8 @@ class Timer {
     Timer& set_current_unit(ampere_t);
 
     // Action.
+    void update_states();
+    void _update_states();
     void update_timing();
 
     std::optional<float> report_at(const std::string&, Split, Tran);

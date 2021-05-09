@@ -622,6 +622,12 @@ void Timer::_insert_primary_output(const std::string& name) {
   _connect_pin(pin, net);
 }
 
+// Procedure: _insert_frontier
+Timer& Timer::insert_frontier(Pin& pin) {
+  _insert_frontier(pin);
+  return *this;
+}
+
 // Procedure: _insert_test
 Test& Timer::_insert_test(Arc& arc) {
   auto& test = _tests.emplace_front(arc);
@@ -991,20 +997,11 @@ void Timer::update_timing() {
   _update_timing();
 }
 
-// Function: _update_timing
-void Timer::_update_timing() {
-  
-  // Timing is update-to-date
-  if(!_lineage) {
-    assert(_frontiers.size() == 0);
-    return;
-  }
+void Timer::update_states() {
+  _update_states();
+}
 
-  // materialize the lineage
-  _executor.run(_taskflow).wait();
-  _taskflow.clear();
-  _lineage.reset();
-  
+void Timer::_update_states() {
   // Check if full update is required
   if(_has_state(FULL_TIMING)) {
     _insert_full_timing_frontiers();
@@ -1028,6 +1025,23 @@ void Timer::_update_timing() {
 
   // clear the state
   _remove_state();
+}
+
+// Function: _update_timing
+void Timer::_update_timing() {
+  
+  // Timing is update-to-date
+  if(!_lineage) {
+    assert(_frontiers.size() == 0);
+    return;
+  }
+
+  // materialize the lineage
+  _executor.run(_taskflow).wait();
+  _taskflow.clear();
+  _lineage.reset();
+  
+  _update_states();
 }
 
 // Procedure: _update_area

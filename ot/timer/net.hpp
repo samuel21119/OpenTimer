@@ -242,6 +242,10 @@ class Net {
       _rct.emplace<Rct>();
       return *this;
     }
+    inline Net& emplace_empty_rct() {
+      _rct.emplace<EmptyRct>();
+      return *this;
+    }
 
     // -------
 
@@ -254,6 +258,9 @@ class Net {
     // to the users as it should be done in parsers.
     // When emulating the parser behaviours, they will be useful.
     inline Net& append(Pin& pin) { _pins.emplace_back(&pin); return *this; }
+
+    Net& manual_update_rc_timing() { return _rc_timing_updated = true, *this; }
+    Net& manual_reset_rc_timing() { return _rc_timing_updated = false, *this; }
 
   private:
 
