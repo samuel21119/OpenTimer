@@ -47,6 +47,7 @@ class RctNode {
     inline const Pin* pin() const { return _pin; }
     inline Pin* pin() { return _pin; } // mutable
     inline RctNode& pin(Pin& p) { _pin = &p; return *this; }
+    inline RctNode& pin(Pin* p) { _pin = p; return *this; }
 
     // Append an RCEdge into list of fanin or fanout.
     inline RctNode& append_fanin(RctEdge& e) { _fanin.emplace_back(&e); return *this; } 
@@ -247,13 +248,11 @@ class Net {
       this->_rct = std::move(tv);
       return *this;
     }
-    inline Net& emplace_rct() {
-      _rct.emplace<Rct>();
-      return *this;
+    inline auto& emplace_rct() {
+      return _rct.emplace<Rct>();
     }
-    inline Net& emplace_empty_rct() {
-      _rct.emplace<EmptyRct>();
-      return *this;
+    inline auto& emplace_empty_rct() {
+      return _rct.emplace<EmptyRct>();
     }
 
     // -------
@@ -268,6 +267,7 @@ class Net {
     // When emulating the parser behaviours, they will be useful.
     inline Net& append(Pin& pin) { _pins.emplace_back(&pin); return *this; }
 
+    inline bool is_rc_timing_updated() const { return _rc_timing_updated; }
     Net& manual_update_rc_timing() { return _rc_timing_updated = true, *this; }
     Net& manual_reset_rc_timing() { return _rc_timing_updated = false, *this; }
 

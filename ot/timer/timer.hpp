@@ -66,7 +66,6 @@ class Timer {
 
     // Action.
     void update_states();
-    void _update_states();
     void update_timing();
 
     std::optional<float> report_at(const std::string&, Split, Tran);
@@ -129,6 +128,8 @@ class Timer {
     inline auto& nets(); // Mutable accessor
     inline auto& pins(); // Mutable accessor
     inline auto& gates(); // Mutable accessor
+
+    Timer& add_empty_lineage(std::filesystem::path path); // Empty lineage
 
   private:
 
@@ -202,6 +203,7 @@ class Timer {
     void _rebase_unit(Celllib&);
     void _rebase_unit(spef::Spef&);
     void _update_timing();
+    void _update_states();
     void _update_endpoints();
     void _update_area();
     void _update_power();

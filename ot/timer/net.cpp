@@ -276,29 +276,25 @@ void Net::_attach(spef::Net&& spef_net) {
 
 // Procedure: _make_rct
 void Net::_make_rct() {
-  
+  // The spef net will be non-empty after the read_spef call.
+  // The new Spef will be attached to the net itself.
   if(!_spef_net) return;
 
   // Step 1: create a new rctree object
   auto& rct = _rct.emplace<Rct>();
-
   // Step 2: insert the node and capacitance (*CAP section).
   for(const auto& [node1, node2, cap] : _spef_net->caps) {
-    
     // ground capacitance
-    if(node2.empty()) {
-      rct.insert_node(node1, cap);
-    }
+    if(node2.empty()) rct.insert_node(node1, cap);
     // TODO: coupling capacitance
   }
-
   // Step 3: insert the segment (*RES section).
   for(const auto& [node1, node2, res] : _spef_net->ress) {
     rct.insert_segment(node1, node2, res);
   }
-  
+  // Detach the spef net once the new rctree has been initialized
+  // from the spef net itself.
   _spef_net.reset();
-  
   _rc_timing_updated = false;
 }
 
@@ -334,12 +330,12 @@ void Net::_scale_resistance(float s) {
 
 // Procedure: _update_rc_timing
 void Net::_update_rc_timing() {
+  if (_rc_timing_updated) return;
 
-  if(_rc_timing_updated) {
-    return;
-  }
-
-  // Apply the spefnet if any
+  // Apply the spefnet if any.
+  // If the spef net is non-empty (after a read_spef call), a new rctree will
+  // be initialized and then the spef net will be detached.
+  // Otherwise, this function will absolutely do nothing.
   _make_rct();
   
   // update the corresponding handle
@@ -357,14 +353,11 @@ void Net::_update_rc_timing() {
       for(auto pin : _pins) {
         if(auto node = rct._node(pin->name()); node == nullptr) {
           OT_LOGE("pin ", pin->name(), " not found in rctree ", _name);
-        }
-        else {
-          if(pin == _root) {
+        } else {
+          if(pin == _root)
             rct._root = node;
-          }
-          else {
+          else
             node->_pin = pin;
-          }
         }
       }
       rct.update_rc_timing();
