@@ -129,8 +129,6 @@ class Timer {
     inline auto& pins(); // Mutable accessor
     inline auto& gates(); // Mutable accessor
 
-    Timer& add_empty_lineage(std::filesystem::path path); // Empty lineage
-
   private:
 
     mutable std::shared_mutex _mutex;

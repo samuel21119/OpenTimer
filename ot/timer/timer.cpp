@@ -34,56 +34,6 @@ size_t Timer::_max_pin_name_size() const {
   }
 }
 
-// Function: read_spef
-Timer& Timer::add_empty_lineage(std::filesystem::path path) {
-  // Create a spefnet shared pointer
-  auto spef = std::make_shared<spef::Spef>(); 
-  
-  std::scoped_lock lock(_mutex);
-
-  // Reader task
-  auto parser = _taskflow.emplace([path=std::move(path), spef] () {
-    OT_LOGI("loading spef ", path);
-    if(spef->read(path); spef->error) {
-      OT_LOGE("Parser-SPEF error:\n", *spef->error);
-    }
-    spef->expand_name();
-  });
-  
-  // Spef update task (this has to be after parser)
-  auto reader = _taskflow.emplace([this, spef] () {
-    // _rebase_unit(*spef);
-    for(auto& spef_net : spef->nets) {
-      auto& net = _nets[spef_net.name];
-      net._attach(std::move(spef_net));
-      _insert_frontier(*net._root);
-      //===================================
-      // auto& rct = net._rct.emplace<Rct>();
-      // for(const auto& [node1, node2, cap] : spef_net.caps) {
-      //   // ground capacitance
-      //   if(node2.empty()) rct.insert_node(node1, cap);
-      // }
-      // for(const auto& [node1, node2, res] : spef_net.ress) {
-      //   rct.insert_segment(node1, node2, res);
-      // }
-      // net._rc_timing_updated = false;
-      //===================================
-    }
-    //for (const auto& [name, net] : _nets)
-    //  _insert_frontier(*net._root);
-    
-    OT_LOGI("added ", spef->nets.size(), " spef nets");
-    OT_LOGI("info: 10");
-  });
-  
-  // Build the task dependency.
-  parser.precede(reader);
-  
-  _add_to_lineage(reader);
-
-  return *this;
-}
-
 // Function: _max_net_name_size
 size_t Timer::_max_net_name_size() const {
   if(_nets.empty()) {
