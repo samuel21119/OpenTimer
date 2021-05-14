@@ -266,10 +266,7 @@ class Net {
     // to the users as it should be done in parsers.
     // When emulating the parser behaviours, they will be useful.
     inline Net& append(Pin& pin) { _pins.emplace_back(&pin); return *this; }
-
     inline bool is_rc_timing_updated() const { return _rc_timing_updated; }
-    Net& manual_update_rc_timing() { return _rc_timing_updated = true, *this; }
-    Net& manual_reset_rc_timing() { return _rc_timing_updated = false, *this; }
 
   private:
 
