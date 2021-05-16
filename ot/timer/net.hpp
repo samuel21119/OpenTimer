@@ -256,6 +256,8 @@ class Net {
     }
 
     // -------
+    inline const std::list<Pin*> pins() const { return _pins; }
+    inline std::list<Pin*> pins() { return _pins; }
 
     // Non-const accessors/mutators may be dangerous.
     inline const Pin* root() const { return _root; }
