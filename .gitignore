@@ -37,5 +37,9 @@ bin/
 example/
 unittest/
 
+# Some editor configuration files
+.vscode/
+*~
+
 # Ignore benchmark/ because it can be too large
 benchmark/
