@@ -49,6 +49,7 @@ class Timer {
     Timer& connect_pin(std::string, std::string);
     Timer& insert_primary_input(std::string);
     Timer& insert_primary_output(std::string);
+    Timer& insert_frontier(Pin&);
     Timer& set_at(std::string, Split, Tran, std::optional<float>);
     Timer& set_rat(std::string, Split, Tran, std::optional<float>);
     Timer& set_slew(std::string, Split, Tran, std::optional<float>);
@@ -64,6 +65,7 @@ class Timer {
     Timer& set_current_unit(ampere_t);
 
     // Action.
+    void update_states();
     void update_timing();
 
     std::optional<float> report_at(const std::string&, Split, Tran);
@@ -122,6 +124,10 @@ class Timer {
     inline const auto& clocks() const;
     inline const auto& tests() const;
     inline const auto& arcs() const;
+
+    inline auto& nets(); // Mutable accessor
+    inline auto& pins(); // Mutable accessor
+    inline auto& gates(); // Mutable accessor
 
   private:
 
@@ -195,6 +201,7 @@ class Timer {
     void _rebase_unit(Celllib&);
     void _rebase_unit(spef::Spef&);
     void _update_timing();
+    void _update_states();
     void _update_endpoints();
     void _update_area();
     void _update_power();
@@ -485,6 +492,24 @@ inline auto Timer::_remove_state(int s) {
   else {
     _state &= ~s;
   }
+}
+
+// Function: pins
+// Expose the pin data structure to users
+inline auto& Timer::pins() {
+  return _pins;
+}
+
+// Function: nets
+// Expose the net data structure to users
+inline auto& Timer::nets() {
+  return _nets;
+}
+
+// Function: gates
+// Expose the gate data structure to users
+inline auto& Timer::gates() {
+  return _gates;
 }
 
 };  // end of namespace ot ------------------------------------------------------------------------

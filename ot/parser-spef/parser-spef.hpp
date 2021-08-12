@@ -13,11 +13,45 @@
 #include <array>
 #include <string_view>
 #include <optional>
-#include <filesystem>
 #include <fstream>
 #include <cmath>
-
+#include <ot/headerdef.hpp>
 #include "pegtl/pegtl.hpp"
+
+// ------------------------------------------------------------------------------------------------
+// AGAIN!!! DO NOT CHANGE ANYTHING BELOW UNLESS YOU KNOW WHAT YOU ARE DOING!!!
+// (development use only)
+//
+// This file has already been modified due to name conflict when merging with dreamplace.
+// The 'using namespace tao::TAO_PEGTL_NAMESPACE' has been removed, and we directly define some
+// structs inside the namespace.
+// ------------------------------------------------------------------------------------------------
+namespace tao::TAO_PEGTL_NAMESPACE {
+  struct plus_minus : opt< one< '+', '-' > > {}; 
+  struct dot : one< '.' > {}; 
+
+  struct inf : seq< istring< 'i', 'n', 'f' >,
+                    opt< istring< 'i', 'n', 'i', 't', 'y' > > > {}; 
+
+  struct nan : seq< istring< 'n', 'a', 'n' >,
+                    opt< one< '(' >,
+                         plus< alnum >,
+                         one< ')' > > > {}; 
+
+  template< typename D > 
+  struct number : if_then_else< dot,
+                                plus< D >,
+                                seq< plus< D >, opt< dot, star< D > > > > {}; 
+
+  struct e : one< 'e', 'E' > {}; 
+  struct p : one< 'p', 'P' > {}; 
+  struct exponent : seq< plus_minus, plus< digit > > {}; 
+
+  struct decimal : seq< number< digit >, opt< e, exponent > > {}; 
+  struct hexadecimal : seq< one< '0' >, one< 'x', 'X' >, number< xdigit >, opt< p, exponent > > {}; 
+
+  struct rule : seq< plus_minus, sor< hexadecimal, decimal, inf, nan > > {};
+}
 
 namespace spef {
 
@@ -139,40 +173,13 @@ struct Spef {
 };
 
 // ------------------------------------------------------------------------------------------------
-// DO NOT CHANGE ANYTHING BELOW UNLESS YOU KNOW WHAT YOU ARE DOING!
+// AGAIN!!! DO NOT CHANGE ANYTHING BELOW UNLESS YOU KNOW WHAT YOU ARE DOING!!!
 // (development use only)
 // ------------------------------------------------------------------------------------------------
 
-namespace double_
-{
-  using namespace tao::TAO_PEGTL_NAMESPACE;  // NOLINT
-
-  struct plus_minus : opt< one< '+', '-' > > {}; 
-  struct dot : one< '.' > {}; 
-
-  struct inf : seq< istring< 'i', 'n', 'f' >,
-                    opt< istring< 'i', 'n', 'i', 't', 'y' > > > {}; 
-
-  struct nan : seq< istring< 'n', 'a', 'n' >,
-                    opt< one< '(' >,
-                         plus< alnum >,
-                         one< ')' > > > {}; 
-
-  template< typename D > 
-  struct number : if_then_else< dot,
-                                plus< D >,
-                                seq< plus< D >, opt< dot, star< D > > > > {}; 
-
-  struct e : one< 'e', 'E' > {}; 
-  struct p : one< 'p', 'P' > {}; 
-  struct exponent : seq< plus_minus, plus< digit > > {}; 
-
-  struct decimal : seq< number< digit >, opt< e, exponent > > {}; 
-  struct hexadecimal : seq< one< '0' >, one< 'x', 'X' >, number< xdigit >, opt< p, exponent > > {}; 
-
-  struct rule : seq< plus_minus, sor< hexadecimal, decimal, inf, nan > > {}; 
+namespace double_ {
+using rule = ::tao::TAO_PEGTL_NAMESPACE::rule;
 };
-
 
 // Function: split_on_space 
 inline void split_on_space(const char* beg, const char* end, std::vector<std::string_view>& tokens) {

@@ -107,6 +107,12 @@ configure_file(
 # add the binayr tree to the search path for include files so we can find TutorialConfig.h
 include_directories(${PROJECT_SOURCE_DIR})
 
+# Since we are going to compile a static library, it is better to add
+# -fPIC flag. The shared library is also available but it is rather more
+# possible that we encounter some problems working with other big
+# project, especially those depending on torch extensions.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+
 # OpenTimer source
 set(OT_CPP
   ot/unit/unit.cpp
@@ -154,7 +160,7 @@ set(OT_CPP
 #message(STATUS "OT_CPP: ${OT_CPP}")
 
 # Add OpenTimer library
-add_library(OpenTimer ${OT_CPP})
+add_library(OpenTimer STATIC ${OT_CPP})
 
 
 ###########################################################
@@ -258,8 +264,10 @@ enable_testing()
 message(STATUS "Building unit tests ...")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/unittest)
 
-add_executable(utility unittest/utility.cpp)
-target_link_libraries(utility ${OT_LINK_FLAGS})
+# Rename the executable from utility to util in order to avoid the
+# name conflict with the library name in dreamplace.
+add_executable(util unittest/utility.cpp)
+target_link_libraries(util ${OT_LINK_FLAGS})
 
 add_executable(path unittest/path.cpp)
 target_link_libraries(path ${OT_LINK_FLAGS})
