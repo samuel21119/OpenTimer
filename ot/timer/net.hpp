@@ -65,6 +65,8 @@ class RctNode {
     TimingData<float, MAX_TRAN, MAX_SPLIT> _ldelay ;
     TimingData<float, MAX_TRAN, MAX_SPLIT> _impulse;
 
+    float diffscale {1.0};
+
     std::list<RctEdge*> _fanin;
     std::list<RctEdge*> _fanout;
 
@@ -283,6 +285,7 @@ class Net {
     std::optional<spef::Net> _spef_net;
 
     bool _rc_timing_updated {false};
+    // bool _diffscale_updated {false};
 
     float _load(Split, Tran) const;
 
@@ -291,6 +294,7 @@ class Net {
     
     void _update_rc_timing();
     void _attach(spef::Net&&);
+    void _diffscale(Pin&, float);
     void _make_rct();
     //void _make_rct(const spef::Net&);
     void _insert_pin(Pin&);

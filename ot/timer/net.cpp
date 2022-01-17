@@ -15,7 +15,7 @@ void RctNode::_scale_capacitance(float s) {
 
 // Function: load
 float RctNode::load(Split el, Tran rf) const {
-  return _load[el][rf];
+  return _load[el][rf] * diffscale;
 }
 
 // Function: cap
@@ -25,12 +25,12 @@ float RctNode::cap(Split el, Tran rf) const {
   
 // Function: slew
 float RctNode::slew(Split m, Tran t, float si) const {  
-  return si < 0.0f ? -std::sqrt(si*si + _impulse[m][t]) : std::sqrt(si*si + _impulse[m][t]);
+  return si < 0.0f ? -std::sqrt(si*si + _impulse[m][t] * diffscale) : std::sqrt(si*si + _impulse[m][t] * diffscale);
 }
 
 // Function: delay
 float RctNode::delay(Split m, Tran t) const {
-  return _delay[m][t];
+  return _delay[m][t] * diffscale;
 }
 
 // Function: impulse
@@ -272,6 +272,22 @@ void Net::_attach(spef::Net&& spef_net) {
   assert(spef_net.name == _name && _root);
   _spef_net = std::move(spef_net);
   _rc_timing_updated = false;
+}
+
+// Procedure: _diffscale
+void Net::_diffscale(Pin &to, float diffscale) {
+  assert(_rc_timing_updated && to._net == this);
+  // _diffscale_updated = true;
+  
+  std::visit(Functors{
+    [&] (EmptyRct&) {
+    },
+    [&] (Rct& rct) {
+      auto node = rct._node(to._name);
+      assert(node);
+      node->diffscale = diffscale;
+    }
+  }, _rct);
 }
 
 // Procedure: _make_rct
