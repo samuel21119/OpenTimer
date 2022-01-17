@@ -53,6 +53,7 @@ class Timer {
     Timer& set_rat(std::string, Split, Tran, std::optional<float>);
     Timer& set_slew(std::string, Split, Tran, std::optional<float>);
     Timer& set_load(std::string, Split, Tran, std::optional<float>);
+    Timer& set_diffscale(std::string, float);
     Timer& create_clock(std::string, float);
     Timer& create_clock(std::string, std::string, float);
     Timer& cppr(bool);
@@ -239,6 +240,7 @@ class Timer {
     void _set_slew(PrimaryInput&, Split, Tran, std::optional<float>);
     void _set_rat(PrimaryOutput&, Split, Tran, std::optional<float>);
     void _set_load(PrimaryOutput&, Split, Tran, std::optional<float>);
+    void _set_diffscale(Pin&, float);
     void _cppr(bool);
     void _topologize(SfxtCache&, size_t) const;
     void _spfa(SfxtCache&) const;

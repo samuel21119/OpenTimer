@@ -1517,6 +1517,40 @@ void Timer::_set_load(PrimaryOutput& po, Split m, Tran t, std::optional<float> v
   _insert_frontier(po._pin);
 }
 
+// Function: set_diffscale
+Timer& Timer::set_diffscale(std::string name, float diffscale) {
+
+  std::scoped_lock lock(_mutex);
+  
+  auto task = _taskflow.emplace([this, name=std::move(name), diffscale] () {
+    if(auto itr = _pins.find(name); itr != _pins.end()) {
+      _set_diffscale(itr->second, diffscale);
+    }
+    else {
+      OT_LOGE("can't set diffscale (PIN ", name, " not found)");
+    }
+  });
+
+  _add_to_lineage(task);
+
+  return *this;
+}
+
+// Procedure: _set_diffscale
+void Timer::_set_diffscale(Pin& pin, float diffscale) {
+  // Update the pin diffscale
+  // No need to recompute Elmore delay
+  pin._net->_diffscale(pin, diffscale);
+
+  // Enable the timing propagation.
+  _insert_frontier(pin);
+  if(pin.is_rct_root()) {  // load update influences upstream delay/slew
+    for(auto arc : pin._fanin) {
+      _insert_frontier(arc->_from);
+    }
+  }
+}
+
 
 };  // end of namespace ot. -----------------------------------------------------------------------
 
