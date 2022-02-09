@@ -130,6 +130,8 @@ class Timer {
     inline auto& pins(); // Mutable accessor
     inline auto& gates(); // Mutable accessor
 
+    inline auto num_worst_endpoints();
+
   private:
 
     mutable std::shared_mutex _mutex;
@@ -512,6 +514,17 @@ inline auto& Timer::nets() {
 // Expose the gate data structure to users
 inline auto& Timer::gates() {
   return _gates;
+}
+
+// Function: endpoints
+inline auto Timer::num_worst_endpoints() {
+  // std::size_t size = 0;
+  // FOR_EACH_EL_RF(el, rf) {
+  //   size = std::max(size, _endpoints[el][rf].size());
+  // }
+  // return size;
+  auto max = std::numeric_limits<size_t>::max();
+  return _worst_endpoints(max).size();
 }
 
 };  // end of namespace ot ------------------------------------------------------------------------
