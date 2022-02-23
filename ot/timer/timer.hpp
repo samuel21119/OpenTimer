@@ -84,7 +84,7 @@ class Timer {
     std::vector<Path> report_timing(size_t, Tran);
     std::vector<Path> report_timing(size_t, Split, Tran);
     std::vector<Path> report_timing(PathGuide);
-    std::vector<std::pair<const std::string&, float>> report_interface_timing_setup(const std::string&);
+    std::vector<std::pair<const std::string&, float>> report_interface_timing(const std::string&, Split);
 
     // Accessor
     void dump_graph(std::ostream&) const;
