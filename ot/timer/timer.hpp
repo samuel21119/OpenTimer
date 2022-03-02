@@ -66,6 +66,7 @@ class Timer {
 
     // Action.
     void update_timing();
+    void update_interface_timing(const std::string&);
 
     std::optional<float> report_at(const std::string&, Split, Tran);
     std::optional<float> report_rat(const std::string&, Split, Tran);
@@ -83,6 +84,7 @@ class Timer {
     std::vector<Path> report_timing(size_t, Tran);
     std::vector<Path> report_timing(size_t, Split, Tran);
     std::vector<Path> report_timing(PathGuide);
+    std::vector<std::pair<const std::string&, float>> report_interface_timing(const std::string&, Split);
 
     // Accessor
     void dump_graph(std::ostream&) const;
@@ -196,6 +198,7 @@ class Timer {
     void _rebase_unit(Celllib&);
     void _rebase_unit(spef::Spef&);
     void _update_timing();
+    void _update_interface_timing(Pin&);
     void _update_endpoints();
     void _update_area();
     void _update_power();

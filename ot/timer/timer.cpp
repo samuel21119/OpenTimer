@@ -1,4 +1,5 @@
 #include <ot/timer/timer.hpp>
+#include <limits>
 
 namespace ot {
 
@@ -1030,6 +1031,72 @@ void Timer::_update_timing() {
   _remove_state();
 }
 
+// Function: update_interface_timing
+// perform localized graph update within 2 hops
+// around a pin.
+void Timer::update_interface_timing(const std::string &name) {
+  std::scoped_lock lock(_mutex);
+  
+  // Timing is update-to-date
+  if(!_lineage) {
+    assert(_frontiers.size() == 0);
+    return;
+  }
+
+  // materialize the lineage
+  _executor.run(_taskflow).wait();
+  _taskflow.clear();
+  _lineage.reset();
+  
+  if(auto itr = _pins.find(name); itr != _pins.end()) {
+    _update_interface_timing(itr->second);
+  }
+  else {
+    OT_LOGE("can't update interface timing (PIN ", name, " not found). you might have to complete one FULL timing analysis before attempting this.");
+  }
+}
+
+// Function: _update_interface_timing
+void Timer::_update_interface_timing(Pin &pin) {
+  if(!pin.is_output()) {
+    OT_LOGE("only cell OUTPUT pins are supported in update_interface_timing.");
+    return;
+  }
+
+  // update nets 1 hop upstream of this pin
+  for(const Arc *arc: pin._fanin) {
+    Pin &p = arc->_from;
+    _fprop_rc_timing(p);
+    _fprop_slew(p);
+    _fprop_delay(p);
+    _fprop_at(p);
+  }
+
+  // update cell arcs to this pin
+  _fprop_slew(pin);
+  _fprop_delay(pin);
+  _fprop_at(pin);
+
+  // update the net at this pin,
+  // and all cell arcs 1 hop downstream of this pin
+  _fprop_rc_timing(pin);
+  for(const Arc *arc: pin._fanout) {
+    Pin &p = arc->_to;
+    _fprop_slew(p);
+    _fprop_delay(p);
+    _fprop_at(p);
+    
+    for(const Arc *a2: p._fanout) {
+      Pin &p2 = a2->_to;
+      
+      _fprop_slew(p2);
+      _fprop_delay(p2);
+      _fprop_at(p2);
+      // _fprop_rc_timing(p2); // out of scope, skipped.
+    }
+  }
+}
+
 // Procedure: _update_area
 void Timer::_update_area() {
   
@@ -1258,6 +1325,50 @@ std::optional<float> Timer::report_area() {
   std::scoped_lock lock(_mutex);
   _update_area();
   return _area;
+}
+
+// Function: report_interface_timing
+// reports fanin and fanout inter-cell delays, from output to output
+// the single value is the maximum over {RF, RF} transitions.
+std::vector<std::pair<const std::string&, float>> Timer::report_interface_timing(const std::string &name, Split el) {
+  std::vector<std::pair<const std::string&, float>> ret;
+  Pin &pin = _pins.at(name); // throws if not matched
+
+  auto minmax = [el] (float a, float b) {
+    if(el == MIN) return std::min(a, b);
+    else return std::max(a, b);
+  };
+
+  // fanin output -> input (p) -> output (pin)
+  for(const Arc *arc: pin._fanin) {
+    Pin &p = arc->_from;
+    float delay = minmax(
+      *p._net->_delay(el, RISE, p) + minmax(
+        arc->_delay[el][RISE][RISE].value_or(std::numeric_limits<float>::lowest()),
+        arc->_delay[el][RISE][FALL].value_or(std::numeric_limits<float>::lowest())),
+      *p._net->_delay(el, FALL, p) + minmax(
+        arc->_delay[el][FALL][RISE].value_or(std::numeric_limits<float>::lowest()),
+        arc->_delay[el][FALL][FALL].value_or(std::numeric_limits<float>::lowest())));
+    ret.emplace_back(std::ref(p._net->_root->_name), delay);
+  }
+
+  // fanout output -> input (p) -> output (q)
+  for(const Arc *arc: pin._fanout) {
+    Pin &p = arc->_to;
+    for(const Arc *a2: p._fanout) {
+      Pin &q = a2->_to;
+      float delay = minmax(
+        *p._net->_delay(el, RISE, p) + minmax(
+          a2->_delay[el][RISE][RISE].value_or(std::numeric_limits<float>::lowest()),
+          a2->_delay[el][RISE][FALL].value_or(std::numeric_limits<float>::lowest())),
+        *p._net->_delay(el, FALL, p) + minmax(
+          a2->_delay[el][FALL][RISE].value_or(std::numeric_limits<float>::lowest()),
+          a2->_delay[el][FALL][FALL].value_or(std::numeric_limits<float>::lowest())));
+      ret.emplace_back(std::ref(q._name), delay);
+    }
+  }
+  
+  return ret;
 }
     
 // Procedure: _enable_full_timing_update
