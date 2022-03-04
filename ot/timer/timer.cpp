@@ -1384,7 +1384,62 @@ std::vector<std::pair<const std::string&, float>> Timer::report_interface_timing
   
   return ret;
 }
-    
+
+// Function: report_fi_interface_timing
+// reports fanin inter-cell delays only, from output to output
+// the single value is the maximum over {RF, RF} transitions.
+std::vector<std::pair<const std::string&, float>> Timer::report_fi_interface_timing(const std::string &name, Split el) {
+  std::vector<std::pair<const std::string&, float>> ret;
+  Pin &pin = _pins.at(name); // throws if not matched
+
+  auto minmax = [el] (float a, float b) {
+    if(el == MIN) return std::min(a, b);
+    else return std::max(a, b);
+  };
+  // fanin output -> input (p) -> output (pin)
+  for(const Arc *arc: pin._fanin) {
+    Pin &p = arc->_from;
+    float delay = minmax(
+      *p._net->_delay(el, RISE, p) + minmax(
+        arc->_delay[el][RISE][RISE].value_or(std::numeric_limits<float>::lowest()),
+        arc->_delay[el][RISE][FALL].value_or(std::numeric_limits<float>::lowest())),
+      *p._net->_delay(el, FALL, p) + minmax(
+        arc->_delay[el][FALL][RISE].value_or(std::numeric_limits<float>::lowest()),
+        arc->_delay[el][FALL][FALL].value_or(std::numeric_limits<float>::lowest())));
+    ret.emplace_back(std::ref(p._net->_root->_name), delay);
+  }  
+  return ret;
+}
+
+// Function: report_fi_interface_timing
+// reports fanout inter-cell delays only, from output to output
+// the single value is the maximum over {RF, RF} transitions.
+std::vector<std::pair<const std::string&, float>> Timer::report_fo_interface_timing(const std::string &name, Split el) {
+  std::vector<std::pair<const std::string&, float>> ret;
+  Pin &pin = _pins.at(name); // throws if not matched
+
+  auto minmax = [el] (float a, float b) {
+    if(el == MIN) return std::min(a, b);
+    else return std::max(a, b);
+  };
+  // fanout output -> input (p) -> output (q)
+  for(const Arc *arc: pin._fanout) {
+    Pin &p = arc->_to;
+    for(const Arc *a2: p._fanout) {
+      Pin &q = a2->_to;
+      float delay = minmax(
+        *p._net->_delay(el, RISE, p) + minmax(
+          a2->_delay[el][RISE][RISE].value_or(std::numeric_limits<float>::lowest()),
+          a2->_delay[el][RISE][FALL].value_or(std::numeric_limits<float>::lowest())),
+        *p._net->_delay(el, FALL, p) + minmax(
+          a2->_delay[el][FALL][RISE].value_or(std::numeric_limits<float>::lowest()),
+          a2->_delay[el][FALL][FALL].value_or(std::numeric_limits<float>::lowest())));
+      ret.emplace_back(std::ref(q._name), delay);
+    }
+  }
+  return ret;
+}
+
 // Procedure: _enable_full_timing_update
 void Timer::_enable_full_timing_update() {
   _insert_state(FULL_TIMING);
