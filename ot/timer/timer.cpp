@@ -1352,10 +1352,10 @@ std::vector<std::pair<const std::string&, float>> Timer::report_interface_timing
         arc->_delay[el][FALL][RISE].value_or(inf),
         arc->_delay[el][FALL][FALL].value_or(inf)));
     // OT_LOGW("fanin arc ", arc->_idx, ", p ", p._name, ", delay ", delay);
-    if(auto it = retmap.find(&p); it != retmap.end()) {
+    if(auto it = retmap.find(p._net->_root); it != retmap.end()) {
       it->second = minmax(it->second, delay);
     }
-    else retmap[&p] = delay;
+    else retmap[p._net->_root] = delay;
     // ret.emplace_back(std::ref(p._net->_root->_name), delay);
   }
 
