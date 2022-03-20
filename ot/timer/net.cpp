@@ -281,6 +281,7 @@ void Net::_diffscale(Pin &to, float diffscale) {
   
   std::visit(Functors{
     [&] (EmptyRct&) {
+      OT_LOGW("diffscale applied to EmptyRct, which is not supported at this moment");
     },
     [&] (Rct& rct) {
       auto node = rct._node(to._name);
@@ -439,7 +440,7 @@ float Net::_load(Split m, Tran t) const {
       return rct.load[m][t];
     },
     [&] (const Rct& rct) {
-      return rct._root->_load[m][t];
+      return rct._root->load(m, t); // do not use _load, as diffscale is not applied to that.
     }
   }, _rct);
 }
