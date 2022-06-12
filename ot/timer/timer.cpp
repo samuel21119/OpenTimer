@@ -1353,11 +1353,19 @@ std::vector<std::pair<const std::string&, float>> Timer::report_interface_timing
   };
   float inf = (el == MIN ? std::numeric_limits<float>::max() : std::numeric_limits<float>::lowest());
 
+  //< <rr, rf>, <fr, ff> >
   std::unordered_map<const Pin *, float> retmap;
 
   // fanin output -> input (p) -> output (pin)
   for(const Arc *arc: pin._fanin) {
     Pin &p = arc->_from;
+    float rr_delay = *p._net->_delay(el, RISE, p) + arc->_delay[el][RISE][RISE].value_or(inf);
+    float rf_delay = *p._net->_delay(el, RISE, p) + arc->_delay[el][RISE][FALL].value_or(inf);
+
+    float fr_delay = *p._net->_delay(el, FALL, p) + arc->_delay[el][FALL][RISE].value_or(inf);
+    float ff_delay = *p._net->_delay(el, FALL, p) + arc->_delay[el][FALL][FALL].value_or(inf);
+
+    
     float delay = minmax(
       *p._net->_delay(el, RISE, p) + minmax(
         arc->_delay[el][RISE][RISE].value_or(inf),
@@ -1365,6 +1373,7 @@ std::vector<std::pair<const std::string&, float>> Timer::report_interface_timing
       *p._net->_delay(el, FALL, p) + minmax(
         arc->_delay[el][FALL][RISE].value_or(inf),
         arc->_delay[el][FALL][FALL].value_or(inf)));
+    
     // OT_LOGW("fanin arc ", arc->_idx, ", p ", p._name, ", delay ", delay);
     if(auto it = retmap.find(p._net->_root); it != retmap.end()) {
       it->second = minmax(it->second, delay);
@@ -1472,6 +1481,102 @@ std::vector<std::pair<const std::string&, float>> Timer::report_fo_interface_tim
   }
   
   std::vector<std::pair<const std::string&, float>> ret;
+  for(const auto &[p, v]: retmap) {
+    ret.emplace_back(std::ref(p->_name), v);
+  }
+  return ret;
+}
+
+// Function: report_fi_interface_timing
+// reports fanin inter-cell delays only, from output to output
+// the single value is the maximum over {RF, RF} transitions.
+std::vector<std::pair<const std::string&, std::pair< std::pair<float, float>, std::pair<float, float>>>> Timer::report_detailed_fi_interface_timing(const std::string &name, Split el) {
+  Pin &pin = _pins.at(name); // throws if not matched
+  auto minmax = [el] (float a, float b) {
+    if(el == MIN) return std::min(a, b);
+    else return std::max(a, b);
+  };
+  float inf = (el == MIN ? std::numeric_limits<float>::max() : std::numeric_limits<float>::lowest());
+
+  std::unordered_map<const Pin *, std::pair< std::pair<float, float>, std::pair<float, float>>> retmap;
+  // fanin output -> input (p) -> output (pin)
+  for(const Arc *arc: pin._fanin) {
+    Pin &p = arc->_from;
+    float rr_delay = *p._net->_delay(el, RISE, p) + arc->_delay[el][RISE][RISE].value_or(inf);
+    float rf_delay = *p._net->_delay(el, RISE, p) + arc->_delay[el][RISE][FALL].value_or(inf);
+    float fr_delay = *p._net->_delay(el, FALL, p) + arc->_delay[el][FALL][RISE].value_or(inf);
+    float ff_delay = *p._net->_delay(el, FALL, p) + arc->_delay[el][FALL][FALL].value_or(inf);
+
+    float delay = minmax(
+      *p._net->_delay(el, RISE, p) + minmax(
+        arc->_delay[el][RISE][RISE].value_or(inf),
+        arc->_delay[el][RISE][FALL].value_or(inf)),
+      *p._net->_delay(el, FALL, p) + minmax(
+        arc->_delay[el][FALL][RISE].value_or(inf),
+        arc->_delay[el][FALL][FALL].value_or(inf)));
+    // OT_LOGW("fanin arc ", arc->_idx, ", p ", p._name, ", delay ", delay);
+    if(auto it = retmap.find(p._net->_root); it != retmap.end()) {
+      //it->second = minmax(it->second, delay);
+      it->second.first.first = minmax(it->second.first.first, rr_delay);
+      it->second.first.second = minmax(it->second.first.second, rf_delay);
+      it->second.second.first = minmax(it->second.second.first, fr_delay);
+      it->second.second.second = minmax(it->second.second.second, ff_delay);
+    }
+    else retmap[p._net->_root] = std::make_pair(std::make_pair(rr_delay, rf_delay), std::make_pair(fr_delay, ff_delay));
+    // ret.emplace_back(std::ref(p._net->_root->_name), delay);
+  }
+  
+  std::vector<std::pair<const std::string&, std::pair< std::pair<float, float>, std::pair<float, float>>>> ret;
+  for(const auto &[p, v]: retmap) {
+    ret.emplace_back(std::ref(p->_name), v);
+  }
+  return ret;
+}
+
+// Function: report_fi_interface_timing
+// reports fanin inter-cell delays only, from output to output
+// the single value is the maximum over {RF, RF} transitions.
+std::vector<std::pair<const std::string&, std::pair< std::pair<float, float>, std::pair<float, float> > > > Timer::report_detailed_fo_interface_timing(const std::string &name, Split el) {
+  Pin &pin = _pins.at(name); // throws if not matched
+  auto minmax = [el] (float a, float b) {
+    if(el == MIN) return std::min(a, b);
+    else return std::max(a, b);
+  };
+  float inf = (el == MIN ? std::numeric_limits<float>::max() : std::numeric_limits<float>::lowest());
+
+  std::unordered_map<const Pin *, std::pair< std::pair<float, float>, std::pair<float, float>>> retmap;
+  // fanin output -> input (p) -> output (pin)
+  for(const Arc *arc: pin._fanout) {
+    Pin &p = arc->_to;
+    for(const Arc *a2: p._fanout) {
+      Pin &q = a2->_to;
+      float rr_delay = *p._net->_delay(el, RISE, p) + a2->_delay[el][RISE][RISE].value_or(inf);
+      float rf_delay = *p._net->_delay(el, RISE, p) + a2->_delay[el][RISE][FALL].value_or(inf);
+      float fr_delay = *p._net->_delay(el, FALL, p) + a2->_delay[el][FALL][RISE].value_or(inf);
+      float ff_delay = *p._net->_delay(el, FALL, p) + a2->_delay[el][FALL][FALL].value_or(inf);
+
+      float delay = minmax(
+        *p._net->_delay(el, RISE, p) + minmax(
+          a2->_delay[el][RISE][RISE].value_or(inf),
+          a2->_delay[el][RISE][FALL].value_or(inf)),
+        *p._net->_delay(el, FALL, p) + minmax(
+          a2->_delay[el][FALL][RISE].value_or(inf),
+          a2->_delay[el][FALL][FALL].value_or(inf)));
+      // OT_LOGW("fanout arc ", arc->_idx, ", p ", p._name, ", q ", q._name, ", delay ", delay);
+      if(auto it = retmap.find(&q); it != retmap.end()) {
+        //it->second = minmax(it->second, delay);
+        it->second.first.first = minmax(it->second.first.first, rr_delay);
+        it->second.first.second = minmax(it->second.first.second, rf_delay);
+        it->second.second.first = minmax(it->second.second.first, fr_delay);
+        it->second.second.second = minmax(it->second.second.second, ff_delay);
+      }
+      else retmap[&q] = std::make_pair(std::make_pair(rr_delay, rf_delay), std::make_pair(fr_delay, ff_delay));
+      // ret.emplace_back(std::ref(q._name), delay);
+    }
+  }
+  
+  
+  std::vector<std::pair<const std::string&, std::pair< std::pair<float, float>, std::pair<float, float>>>> ret;
   for(const auto &[p, v]: retmap) {
     ret.emplace_back(std::ref(p->_name), v);
   }
