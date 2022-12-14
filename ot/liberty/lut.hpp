@@ -26,6 +26,10 @@ inline const std::unordered_map<std::string_view, LutVar> lut_vars {
   {"input_transition_timing",      LutVar::INPUT_TRANSITION_TIME}
 };
 
+// Function: set_use_iccad2014_models
+// if set, the simplified 2x2 LUT model will be used.
+void set_use_iccad2014_models(bool use);
+
 // Function: is_time_lut_var
 bool is_time_lut_var(LutVar);
 bool is_capacitance_lut_var(LutVar);
