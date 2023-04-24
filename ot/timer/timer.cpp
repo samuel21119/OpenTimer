@@ -1221,6 +1221,47 @@ void Timer::_update_endpoints() {
     });
   }
 
+  // Add the following part to report a proper tns which only considers the
+  // worst one between RISE and FALL instead of both or each.
+  FOR_EACH_EL(el) {
+    // reset the storage and build task
+    _endpoints_elw[el].clear();
+    _taskflow.emplace([this, el=el] () {
+
+      // for each po
+      for(auto& po : _pos) {
+        if (po.second.slack(el, ot::RISE).has_value() ||
+            po.second.slack(el, ot::FALL).has_value()) {
+          _endpoints_elw[el].emplace_back(el, po.second);
+        }
+      }
+
+      // for each test
+      for(auto& test : _tests) {
+        if (test.slack(el, ot::RISE).has_value() ||
+            test.slack(el, ot::FALL).has_value()) {
+          _endpoints_elw[el].emplace_back(el, test);
+        }
+      }
+      
+      // sort endpoints
+      std::sort(_endpoints_elw[el].begin(), _endpoints_elw[el].end());
+
+      // update the tns, and fep
+      if(!_endpoints_elw[el].empty()) {
+        _tns_elw[el] = 0.0f;
+        for(const auto& ept : _endpoints_elw[el]) {
+          if(auto slack = ept.slack(); slack < 0.0f) {
+            _tns_elw[el] = *_tns_elw[el] + slack;
+          }
+        }
+      }
+      else {
+        _tns_elw[el] = std::nullopt;
+      }
+    });
+  }
+
   // run tasks
   _executor.run(_taskflow).wait();
   _taskflow.clear();
@@ -1321,6 +1362,27 @@ std::optional<size_t> Timer::report_fep(std::optional<Split> el, std::optional<T
   }
   else {
     v = _fep[*el][*rf];
+  }
+
+  return v;
+}
+
+// Function: tns with only the worst between RISE and FALL considered.
+// Update the total negative slack for any timing split.
+std::optional<float> Timer::report_tns_elw(std::optional<Split> el) {
+
+  std::scoped_lock lock(_mutex);
+
+  _update_endpoints();
+
+  std::optional<float> v;
+
+  if(!el) {
+    FOR_EACH_EL_IF(s, _tns_elw[s]) {
+      v = !v ? _tns_elw[s] : *v + *(_tns_elw[s]);
+    }
+  } else {
+    v = _tns_elw[*el];
   }
 
   return v;

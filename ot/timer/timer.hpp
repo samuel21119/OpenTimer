@@ -80,6 +80,7 @@ class Timer {
     std::optional<float> report_tns(std::optional<Split> = {}, std::optional<Tran> = {});
     std::optional<float> report_wns(std::optional<Split> = {}, std::optional<Tran> = {});
     std::optional<size_t> report_fep(std::optional<Split> = {}, std::optional<Tran> = {});
+    std::optional<float> report_tns_elw(std::optional<Split> = {});
     
     std::vector<Path> report_timing(size_t);
     std::vector<Path> report_timing(size_t, Split);
@@ -173,9 +174,11 @@ class Timer {
     std::list<SCC> _sccs;
 
     TimingData<std::vector<Endpoint>, MAX_SPLIT, MAX_TRAN> _endpoints;
+    TimingData<std::vector<EndpointSplit>, MAX_SPLIT> _endpoints_elw;
     TimingData<std::optional<float>,  MAX_SPLIT, MAX_TRAN> _wns;
     TimingData<std::optional<float>,  MAX_SPLIT, MAX_TRAN> _tns;
     TimingData<std::optional<size_t>, MAX_SPLIT, MAX_TRAN> _fep;
+    TimingData<std::optional<float>,  MAX_SPLIT> _tns_elw;
     
     std::optional<float> _area;
     std::optional<float> _leakage_power;
