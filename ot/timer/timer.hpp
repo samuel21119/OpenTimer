@@ -26,10 +26,11 @@ class Timer {
 
   friend class Shell;
   
-  constexpr static int FULL_TIMING   = 0x01;
-  constexpr static int EPTS_UPDATED  = 0x02;
-  constexpr static int AREA_UPDATED  = 0x04;
-  constexpr static int POWER_UPDATED = 0x08;
+  constexpr static int FULL_TIMING    = 0x01;
+  constexpr static int EPTS_UPDATED   = 0x02;
+  constexpr static int AREA_UPDATED   = 0x04;
+  constexpr static int POWER_UPDATED  = 0x08;
+  constexpr static int EPTSEL_UPDATED = 0x10;
 
   public:
     
@@ -216,6 +217,7 @@ class Timer {
     void _update_states();
     void _update_interface_timing(Pin&);
     void _update_endpoints();
+    void _update_endpoints_elw();
     void _update_area();
     void _update_power();
     void _fprop_rc_timing(Pin&);

@@ -1221,6 +1221,22 @@ void Timer::_update_endpoints() {
     });
   }
 
+  // run tasks
+  _executor.run(_taskflow).wait();
+  _taskflow.clear();
+
+  _insert_state(EPTS_UPDATED);
+}
+
+// Procedure: _update_endpoints
+void Timer::_update_endpoints_elw() {
+
+  _update_timing();
+
+  if(_has_state(EPTSEL_UPDATED)) {
+    return;
+  }
+
   // Add the following part to report a proper tns which only considers the
   // worst one between RISE and FALL instead of both or each.
   FOR_EACH_EL(el) {
@@ -1266,7 +1282,7 @@ void Timer::_update_endpoints() {
   _executor.run(_taskflow).wait();
   _taskflow.clear();
 
-  _insert_state(EPTS_UPDATED);
+  _insert_state(EPTSEL_UPDATED);
 }
 
 // Function: tns
@@ -1373,7 +1389,7 @@ std::optional<float> Timer::report_tns_elw(std::optional<Split> el) {
 
   std::scoped_lock lock(_mutex);
 
-  _update_endpoints();
+  _update_endpoints_elw();
 
   std::optional<float> v;
 
