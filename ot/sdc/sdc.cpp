@@ -16,6 +16,11 @@ std::filesystem::path home() {
   if(std::filesystem::exists(path)) {
     return path;
   }
+
+  path = std::filesystem::path("include") / "ot" / "sdc";
+  if(std::filesystem::exists(path)) {
+    return path;
+  }
   
   return "";
 }
